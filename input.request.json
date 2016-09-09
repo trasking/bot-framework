@@ -1,0 +1,9 @@
+{
+	"text": "sample text",
+	"action": "fake action",
+	"payload": { "sample": "value" },
+	"context": {
+		"user": "12345",
+		"callbackUrl": "http://example.com"
+	}
+}

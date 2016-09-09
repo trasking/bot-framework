@@ -1,0 +1,23 @@
+{
+  "status" : "ok",
+  "detail" : "no problems here",
+  "responses" : [
+    {
+      "primary_text" : "This is the primary text",
+      "secondary_text" : "This is the secondary text",
+      "image" : "http://abc.com",
+      "actions" : [
+        {
+          "type" : "foo",
+          "text" : "Button Text",
+          "payload" : { "fake": "payload" },
+          "default" : true
+        } 
+      ]
+    }
+  ],
+  "context": {
+    "user": "1234",
+    "callbackUrl": "https://abc.com"  
+  }
+}
