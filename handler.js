@@ -1,6 +1,6 @@
 'use strict';
 
-const bot = require('utilities');
+const bot = require('bot');
 
 // const aws = require('aws-sdk');
 
@@ -9,9 +9,9 @@ module.exports.input = (event, context, callback) => {
     	status: 'ok',
     	detail: 'example',
     	responses: [ { primaryText: 'This is the primary text.'} ],
-    	context: event.context
+    	context: event.body.context
     }
-	bot.postToUrl(event.context.callbackUrl, responseBody, (result) => {
+	bot.postToUrl(event.body.context.callbackUrl, responseBody, (result) => {
 		callback(null, { function: 'input', result: result });	
 	});
 };

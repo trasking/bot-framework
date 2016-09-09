@@ -34,7 +34,11 @@ functions:
   input:
     handler: handler.input
     memorySize: 128
-    
+    events:
+      - http:
+          path: input
+          method: post
+
 #   you can add any of the following events
 #   events:
 #     - http:
