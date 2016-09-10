@@ -16,11 +16,8 @@ service: bot-framework # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs4.3
-
-# you can overwrite defaults here
-defaults:
- stage: dev
- region: us-west-2
+  stage: dev
+  region: us-west-2
 
 # you can add packaging information here
 #package:
