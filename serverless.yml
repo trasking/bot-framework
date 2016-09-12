@@ -6,9 +6,11 @@ provider:
   stage: dev
   region: us-west-2
   iamRoleStatements:
-      -  ${file(policies/dynamo.db.json)}
+      - ${file(policies/dynamo.db.json)}
+      - ${file(policies/lambda.json)}
 
 functions:
+
   input:
     handler: handler.input
     memorySize: 128
@@ -16,3 +18,7 @@ functions:
       - http:
           path: input
           method: post
+
+  addPrinter:
+    handler: handler.addPrinter
+    memorySize: 128

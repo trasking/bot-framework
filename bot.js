@@ -2,6 +2,7 @@
 
 const https = require('https');
 const uri = require('url');
+const aws = require('aws-sdk');
 
 module.exports.postToUrl = (url, body, callback) => {
     let parts = uri.parse(url);
@@ -23,4 +24,21 @@ module.exports.postToUrl = (url, body, callback) => {
     });
     req.write(JSON.stringify(body));
     req.end();
+};
+
+module.exports.callLambda = (functionName, payload) => {
+    // console.log(functionName, payload);
+    // return;
+    let lambda = new aws.Lambda({ region: 'us-west-2' });
+    let params = {
+        FunctionName: functionName,
+        InvocationType: 'Event',
+        LogType: 'None',
+        Payload: JSON.stringify(payload)
+    };
+    lambda.invoke(params, (error, data) => {
+        if (error) {
+            console.log("ERROR: ", error);
+        }
+    });
 };

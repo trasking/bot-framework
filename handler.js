@@ -2,19 +2,32 @@
 
 const bot = require('bot');
 
-// const aws = require('aws-sdk');
-
 module.exports.input = (event, context, callback) => {
-    
+  console.log(event);
+  if ('addprinter' ==  event.body.input.action) {
+      bot.callLambda('bot-framework-dev-addPrinter', event);
+      callback(null, 'add printer OK');
+  } else {
     let payload = getPayload(event);
-
     console.log(payload);
-
-	bot.postToUrl(event.body.context.callback, payload, (result) => {
-		callback(null, { function: 'input', result: result });	
-	});
+  	bot.postToUrl(event.body.context.callback, payload, (result) => {
+  		callback(null, { function: 'input', result: result });
+  	});
+  }
 };
 
+module.exports.addPrinter = (event, context, callback) => {
+  console.log(event);
+  let payload = {
+    status: 'ok',
+    detail: event.body,
+    text: 'add printer!!!',
+    context: event.body.context
+  }
+  bot.postToUrl(event.body.context.callback, payload, (result) => {
+		callback(null, { function: 'input', result: result });
+	});
+};
 
 let getPayload = (event) => {
 
@@ -23,7 +36,7 @@ let getPayload = (event) => {
     	detail: event.body.input,
     	text: 'This is the primary text reply or the lead in text for list of items',
     	items: [
-    		{ 
+    		{
     			color: '#00FF00',
     			basic_text: 'This item text is for bare-bones clients',
     			title_text: 'Shown in the title area',
@@ -38,7 +51,7 @@ let getPayload = (event) => {
 	    			{
 	    				title: 'Command Text',
 	    				text: event.body.input.text
-	    			}	
+	    			}
     			],
     			actions: [
     				{
@@ -56,37 +69,22 @@ let getPayload = (event) => {
     				}
     			]
     		},
-            { 
-                color: '#0000FF',
-                basic_text: 'This item text is for bare-bones clients',
-                title_text: 'Shown in the title area',
-                subtitle_text: 'Shown in the subtitle area',
-                footer_text: 'This is the footer',
-                image: 'https://img1.etsystatic.com/053/0/8863163/il_75x75.688855889_pehc.jpg',
-                text_fields: [
-                    {
-                        title: 'Sample',
-                        text: 'Just a sample field'
-                    }   
-                ]
-            }  
+        {
+            color: '#0000FF',
+            basic_text: 'This item text is for bare-bones clients',
+            title_text: 'Shown in the title area',
+            subtitle_text: 'Shown in the subtitle area',
+            footer_text: 'This is the footer',
+            image: 'https://img1.etsystatic.com/053/0/8863163/il_75x75.688855889_pehc.jpg',
+            text_fields: [
+                {
+                    title: 'Sample',
+                    text: 'Just a sample field'
+                }
+            ]
+        }
     	],
     	context: event.body.context
     };
 
 };
-
-// let callLambda = (functionName, event) => {
-//     let lambda = new aws.Lambda({ region: 'us-west-2' });
-//     let params = {
-//         FunctionName: functionName,
-//         InvocationType: 'Event',
-//         LogType: 'None',
-//         Payload: JSON.stringify(event)
-//     };
-//     lambda.invoke(params, (error, data) => {
-//         if (error) {
-//             console.log("ERROR: ", error);
-//         }
-//     });  
-// };

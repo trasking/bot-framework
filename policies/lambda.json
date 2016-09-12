@@ -1,0 +1,9 @@
+{
+    "Effect": "Allow",
+    "Action": [
+        "lambda:InvokeFunction"
+    ],
+    "Resource": [
+        "arn:aws:lambda:us-west-2:084075158741:function:bot-framework-dev-addPrinter"
+    ]
+}
