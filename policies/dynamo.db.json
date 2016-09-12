@@ -1,0 +1,16 @@
+{
+    "Effect": "Allow",
+    "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+    ],
+    "Resource": [
+        "arn:aws:dynamodb:us-west-2:084075158741:table/bot-printers"
+    ]
+}
