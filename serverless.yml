@@ -18,6 +18,9 @@ functions:
       - http:
           path: input
           method: post
+      - sns:
+          topicName: bot-framework-input
+          displayName: Bot framework input handler
 
   addPrinter:
     handler: handler.addPrinter

@@ -1,16 +1,17 @@
 'use strict';
 
-const bot = require('bot');
+const bot = require('modules/bot');
 
 module.exports.input = (event, context, callback) => {
-  console.log(event);
-  if ('addprinter' ==  event.body.input.action) {
-      bot.callLambda('bot-framework-dev-addPrinter', event);
+  var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
+  console.log(message);
+  if ('addprinter' ==  message.input.action) {
+      bot.callLambda('bot-framework-dev-addPrinter', message);
       callback(null, 'add printer OK');
   } else {
-    let payload = getPayload(event);
+    let payload = getPayload(message);
     console.log(payload);
-  	bot.postToUrl(event.body.context.callback, payload, (result) => {
+  	bot.postToUrl(message.context.callback, payload, (result) => {
   		callback(null, { function: 'input', result: result });
   	});
   }
@@ -29,11 +30,11 @@ module.exports.addPrinter = (event, context, callback) => {
 	});
 };
 
-let getPayload = (event) => {
+let getPayload = (message) => {
 
 	return {
     	status: 'ok',
-    	detail: event.body.input,
+    	detail: message.input,
     	text: 'This is the primary text reply or the lead in text for list of items',
     	items: [
     		{
@@ -46,11 +47,11 @@ let getPayload = (event) => {
     			text_fields: [
 	    			{
 						title: 'Slack Command',
-	    				text: event.body.input.action
+	    				text: message.input.action
 	    			},
 	    			{
 	    				title: 'Command Text',
-	    				text: event.body.input.text
+	    				text: message.input.text
 	    			}
     			],
     			actions: [
@@ -84,7 +85,7 @@ let getPayload = (event) => {
             ]
         }
     	],
-    	context: event.body.context
+    	context: message.context
     };
 
 };
