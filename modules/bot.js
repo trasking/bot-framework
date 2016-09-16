@@ -4,6 +4,25 @@ const https = require('https');
 const uri = require('url');
 const aws = require('aws-sdk');
 
+module.exports.addUserToGroup => (user, group, callback) => {
+  let dynamo = new aws.DynamoDB();
+  let item = {
+    "TableName": "bot-group",
+    "Key": { "group_id": { "S": group } },
+    "ExpressionAttributeValues": {
+        ":user": { "S": user }
+    },
+    "CondtionExpression": "NOT(contains(users, :user))",
+    "UpdateExpression": "ADD users [:user]",
+    "ReturnConsumedCapacity": "TOTAL",
+    "ReturnItemCollectionMetrics": "SIZE",
+    "ReturnValues": "ALL_NEW"
+  };
+  dynamo.updateItem(item, (error, data) => {
+    callback(error, data);
+  });
+}
+
 module.exports.postToUrl = (url, body, callback) => {
     let parts = uri.parse(url);
     let options = {

@@ -10,11 +10,13 @@ module.exports.input = (event, context, callback) => {
       bot.callLambda('bot-framework-dev-addPrinter', message);
       callback(null, 'add printer OK');
   } else {
-    let payload = bot.samplePayload(message);
-    console.log(payload);
-  	bot.postToUrl(message.context.callback, payload, (result) => {
-  		callback(null, { result: result });
-  	});
+    bot.addUserToGroup(message.context.user, message.context.group, (error, data) => {
+      console.log(error, data);
+      let payload = bot.samplePayload(message);
+      bot.postToUrl(message.context.callback, payload, (result) => {
+    		callback(null, { result: result });
+    	});
+    });
   }
 };
 
@@ -45,20 +47,21 @@ module.exports.addUser = (event, context, callback) => {
 };
 
 module.exports.addGroup = (event, context, callback) => {
+  console.log(event);
   let dynamo = new aws.DynamoDB();
   let item = {
     "TableName": "bot-group",
-    "Key": { "group_id": { "S": event.body.teamId } },
+    "Key": { "group_id": { "S": event.body.team_id } },
     "ExpressionAttributeValues": {
-        ":team_name": { "S": event.body.teamName },
-        ":created_at": { "S": (new Date()).toISOString() },
-        ":team_url": { "S": event.body.teamUrl },
-        ":icon_url": { "S": event.body.iconUrl },
-        ":access_token": { "S": event.body.accessToken },
-        ":bot_user_id": { "S": event.body.botUserId },
-        ":bot_user_access_token": { "S": event.body.botUserAccessToken }
+        ":team_name": { "S": event.body.team_name },
+        ":team_domain": { "S": event.body.team_domain },
+        ":team_icon": { "S": event.body.team_icon },
+        ":team_access_token": { "S": event.body.team_access_token },
+        ":bot_user_id": { "S": event.body.bot_user_id },
+        ":bot_access_token": { "S": event.body.bot_access_token },
+        ":current_date_time": { "S": (new Date()).toISOString() }
     },
-    "UpdateExpression": "SET team_name = :team_name, created_at = if_not_exists(created_at, :created_at), team_url = :team_url, icon_url = :icon_url, access_token = :access_token, bot_user_id = :bot_user_id, bot_user_access_token = :bot_user_access_token",
+    "UpdateExpression": "SET team_name = :team_name, created_at = if_not_exists(created_at, :current_date_time), updated_at = :current_date_time, team_domain = :team_domain, team_icon = :team_icon, team_access_token = :team_access_token, bot_user_id = :bot_user_id, bot_access_token = :bot_access_token",
     "ReturnConsumedCapacity": "TOTAL",
     "ReturnItemCollectionMetrics": "SIZE",
     "ReturnValues": "UPDATED_NEW"
