@@ -25,3 +25,23 @@ functions:
   addPrinter:
     handler: handler.addPrinter
     memorySize: 128
+    events:
+      - http:
+          path: printer
+          method: post
+
+  addUser:
+    handler: handler.addUser
+    memorySize: 128
+    events:
+      - http:
+          path: user
+          method: post
+
+  addGroup:
+    handler: handler.addGroup
+    memorySize: 128
+    events:
+      - http:
+          path: group
+          method: post

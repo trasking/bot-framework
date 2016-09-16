@@ -1,6 +1,7 @@
 'use strict';
 
 const bot = require('modules/bot');
+const aws = require('aws-sdk');
 
 module.exports.input = (event, context, callback) => {
   var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
@@ -9,10 +10,10 @@ module.exports.input = (event, context, callback) => {
       bot.callLambda('bot-framework-dev-addPrinter', message);
       callback(null, 'add printer OK');
   } else {
-    let payload = getPayload(message);
+    let payload = bot.samplePayload(message);
     console.log(payload);
   	bot.postToUrl(message.context.callback, payload, (result) => {
-  		callback(null, { function: 'input', result: result });
+  		callback(null, { result: result });
   	});
   }
 };
@@ -26,66 +27,43 @@ module.exports.addPrinter = (event, context, callback) => {
     context: event.body.context
   }
   bot.postToUrl(event.body.context.callback, payload, (result) => {
-		callback(null, { function: 'input', result: result });
+		callback(null, { result: result });
 	});
 };
 
-let getPayload = (message) => {
+module.exports.addUser = (event, context, callback) => {
+  console.log(event);
+  let payload = {
+    status: 'ok',
+    detail: event.body,
+    text: 'add user!!!',
+    context: event.body.context
+  }
+  bot.postToUrl(event.body.context.callback, payload, (result) => {
+		callback(null, { result: result });
+	});
+};
 
-	return {
-    	status: 'ok',
-    	detail: message.input,
-    	text: 'This is the primary text reply or the lead in text for list of items',
-    	items: [
-    		{
-    			color: '#00FF00',
-    			basic_text: 'This item text is for bare-bones clients',
-    			title_text: 'Shown in the title area',
-    			subtitle_text: 'Shown in the subtitle area',
-                footer_text: 'This is the footer',
-                image: 'https://farm9.staticflickr.com/8171/8028156532_4717b2be77_s.jpg',
-    			text_fields: [
-	    			{
-						title: 'Slack Command',
-	    				text: message.input.action
-	    			},
-	    			{
-	    				title: 'Command Text',
-	    				text: message.input.text
-	    			}
-    			],
-    			actions: [
-    				{
-    					type: 'button',
-                        id: 'action_1',
-    					text: 'Button text',
-    					payload: { fake: 'payload' },
-    					default: true
-    				},
-    				{
-    					type: 'button',
-                        id: 'action_2',
-    					text: 'Another button',
-    					payload: { fake: 'payload' }
-    				}
-    			]
-    		},
-        {
-            color: '#0000FF',
-            basic_text: 'This item text is for bare-bones clients',
-            title_text: 'Shown in the title area',
-            subtitle_text: 'Shown in the subtitle area',
-            footer_text: 'This is the footer',
-            image: 'https://img1.etsystatic.com/053/0/8863163/il_75x75.688855889_pehc.jpg',
-            text_fields: [
-                {
-                    title: 'Sample',
-                    text: 'Just a sample field'
-                }
-            ]
-        }
-    	],
-    	context: message.context
-    };
-
+module.exports.addGroup = (event, context, callback) => {
+  let dynamo = new aws.DynamoDB();
+  let item = {
+    "TableName": "bot-group",
+    "Key": { "group_id": { "S": event.body.teamId } },
+    "ExpressionAttributeValues": {
+        ":team_name": { "S": event.body.teamName },
+        ":created_at": { "S": (new Date()).toISOString() },
+        ":team_url": { "S": event.body.teamUrl },
+        ":icon_url": { "S": event.body.iconUrl },
+        ":access_token": { "S": event.body.accessToken },
+        ":bot_user_id": { "S": event.body.botUserId },
+        ":bot_user_access_token": { "S": event.body.botUserAccessToken }
+    },
+    "UpdateExpression": "SET team_name = :team_name, created_at = if_not_exists(created_at, :created_at), team_url = :team_url, icon_url = :icon_url, access_token = :access_token, bot_user_id = :bot_user_id, bot_user_access_token = :bot_user_access_token",
+    "ReturnConsumedCapacity": "TOTAL",
+    "ReturnItemCollectionMetrics": "SIZE",
+    "ReturnValues": "UPDATED_NEW"
+  };
+  dynamo.updateItem(item, (error, data) => {
+    callback(null, { error: error, data: data });
+  });
 };
