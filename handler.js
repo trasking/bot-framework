@@ -2,6 +2,7 @@
 
 const bot = require('modules/bot');
 const aws = require('aws-sdk');
+const request = require('request');
 
 module.exports.input = (event, context, callback) => {
   var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
@@ -13,9 +14,14 @@ module.exports.input = (event, context, callback) => {
     bot.addUserToGroup(message.context.user, message.context.group, (error, data) => {
       console.log(error, data);
       let payload = bot.samplePayload(message);
-      bot.postToUrl(message.context.callback, payload, (result) => {
-    		callback(null, { result: result });
-    	});
+      request({
+        method: 'POST',
+        url: event.body.context.callback,
+        body: payload,
+        json: true
+      }, (error, response, data) => {
+          callback(null, { status: response.statusCode, error: error, data: data });
+      });
     });
   }
 };
@@ -28,9 +34,15 @@ module.exports.addPrinter = (event, context, callback) => {
     text: 'add printer!!!',
     context: event.body.context
   }
-  bot.postToUrl(event.body.context.callback, payload, (result) => {
-		callback(null, { result: result });
-	});
+
+  request({
+    method: 'POST',
+    url: event.body.context.callback,
+    body: payload,
+    json: true
+  }, (error, response, data) => {
+      callback(null, { status: response.statusCode, error: error, data: data });
+  });
 };
 
 module.exports.addUser = (event, context, callback) => {
@@ -41,9 +53,14 @@ module.exports.addUser = (event, context, callback) => {
     text: 'add user!!!',
     context: event.body.context
   }
-  bot.postToUrl(event.body.context.callback, payload, (result) => {
-		callback(null, { result: result });
-	});
+  request({
+    method: 'POST',
+    url: event.body.context.callback,
+    body: payload,
+    json: true
+  }, (error, response, data) => {
+      callback(null, { status: response.statusCode, error: error, data: data });
+  });
 };
 
 module.exports.addGroup = (event, context, callback) => {
