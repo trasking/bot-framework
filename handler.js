@@ -16,11 +16,11 @@ module.exports.input = (event, context, callback) => {
       let payload = bot.samplePayload(message);
       request({
         method: 'POST',
-        url: event.body.context.callback,
+        url: message.context.callback,
         body: payload,
         json: true
       }, (error, response, data) => {
-          callback(null, { status: response.statusCode, error: error, data: data });
+        callback(null, { error: error, response: response, data: data });
       });
     });
   }
@@ -41,7 +41,7 @@ module.exports.addPrinter = (event, context, callback) => {
     body: payload,
     json: true
   }, (error, response, data) => {
-      callback(null, { status: response.statusCode, error: error, data: data });
+    callback(null, { error: error, response: response, data: data });
   });
 };
 
@@ -59,7 +59,7 @@ module.exports.addUser = (event, context, callback) => {
     body: payload,
     json: true
   }, (error, response, data) => {
-      callback(null, { status: response.statusCode, error: error, data: data });
+    callback(null, { error: error, response: response, data: data });
   });
 };
 
