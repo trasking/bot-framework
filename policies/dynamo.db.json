@@ -12,6 +12,7 @@
     ],
     "Resource": [
         "arn:aws:dynamodb:us-west-2:084075158741:table/bot-printers",
-        "arn:aws:dynamodb:us-west-2:084075158741:table/bot-group"
+        "arn:aws:dynamodb:us-west-2:084075158741:table/bot-group",
+        "arn:aws:dynamodb:us-west-2:084075158741:table/bot-user"
     ]
 }

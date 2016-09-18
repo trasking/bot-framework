@@ -4,21 +4,40 @@ const https = require('https');
 const uri = require('url');
 const aws = require('aws-sdk');
 
-module.exports.addUserToGroup = (user, group, callback) => {
-  let dynamo = new aws.DynamoDB();
-  let item = {
-    "TableName": "bot-group",
-    "Key": { "group_id": { "S": group } },
-    "ExpressionAttributeValues": { ":user": { "SS": [ user ] } },
-    "ConditionExpression": "NOT(contains(members, :user))",
-    "UpdateExpression": "ADD members :user",
-    "ReturnConsumedCapacity": "TOTAL",
-    "ReturnItemCollectionMetrics": "SIZE",
-    "ReturnValues": "ALL_NEW"
-  };
-  dynamo.updateItem(item, (error, data) => {
-    callback(error, data);
-  });
+module.exports.processGroup = (message, callback) => {
+  if (message.context.group) {
+    let dynamo = new aws.DynamoDB();
+    let params = {
+      "TableName": "bot-group",
+      "Key": { "group_id": { "S": message.context.group } },
+      "ExpressionAttributeValues": { ":user": { "SS": [ message.context.user ] } },
+      "ConditionExpression": "NOT(contains(members, :user))",
+      "UpdateExpression": "ADD members :user",
+      "ReturnConsumedCapacity": "TOTAL",
+      "ReturnItemCollectionMetrics": "SIZE",
+      "ReturnValues": "ALL_NEW"
+    };
+    dynamo.updateItem(params, (error, data) => {
+      callback(error, data);
+    });
+  } else {
+    callback(null, { status: 'missing', detail: 'No group provided in input'});
+  }
+}
+
+module.exports.processUser = (message, callback) => {
+  if (message.context.user) {
+    let dynamo = new aws.DynamoDB();
+    let params = {
+      "TableName": "bot-user",
+      "Key": { "user_id": { "S": message.context.user } }
+    };
+    dynamo.getItem(params, (error, data) => {
+      callback(error, data);
+    });
+  } else {
+    callback(null, { status: 'missing', detail: 'No user provided in input'});
+  }
 }
 
 module.exports.callLambda = (functionName, payload) => {

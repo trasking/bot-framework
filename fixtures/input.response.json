@@ -12,12 +12,12 @@
           "text" : "Button Text",
           "payload" : { "fake": "payload" },
           "default" : true
-        } 
+        }
       ]
     }
   ],
   "context": {
     "user": "1234",
-    "callbackUrl": "https://abc.com"  
+    "service_endpoint": "https://abc.com"  
   }
 }

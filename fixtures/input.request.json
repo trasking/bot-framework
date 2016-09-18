@@ -4,6 +4,6 @@
 	"payload": { "sample": "value" },
 	"context": {
 		"user": "12345",
-		"callbackUrl": "http://example.com"
+		"service_endpoint": "http://example.com"
 	}
 }

@@ -6,24 +6,23 @@ const request = require('request');
 
 module.exports.input = (event, context, callback) => {
   var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
-  console.log(message);
-  if ('addprinter' ==  message.input.action) {
-      bot.callLambda('bot-framework-dev-addPrinter', message);
-      callback(null, 'add printer OK');
-  } else {
-    bot.addUserToGroup(message.context.user, message.context.group, (error, data) => {
-      console.log(error, data);
-      let payload = bot.samplePayload(message);
-      request({
-        method: 'POST',
-        url: message.context.callback,
-        body: payload,
-        json: true
-      }, (error, response, data) => {
-        callback(null, { error: error, response: response, data: data });
-      });
+  console.log('INPUT', message);
+  bot.processGroup(message, (error, data) => {
+    console.log('GROUP: ', error, data);
+    bot.processUser(message, (error, data) => {
+        console.log('USER: ', error, data);
+        let payload = bot.samplePayload(message);
+        request({
+          method: 'POST',
+          url: `${message.context.service_endpoint}/callback`,
+          body: payload,
+          json: true
+        }, (error, response, data) => {
+          console.log('CALLBACK', error, response, data);
+          callback(null, { error: error, response: response, data: data });
+        });
     });
-  }
+  });
 };
 
 module.exports.addPrinter = (event, context, callback) => {
