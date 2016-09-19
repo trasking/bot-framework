@@ -38,27 +38,65 @@ module.exports.processUser = (message, callback) => {
     let dynamo = new aws.DynamoDB();
     let params = {
       TableName: 'bot-user',
-      Key: { "user_id": { "S": message.context.user.user_id } }
+      Key: { user_id: { S: message.context.user.user_id } }
     };
-    dynamo.getItem(params, (error, data) => {
-      console.log('RAW USER RESPONSE', error, data);
-      if (data.Item) {
-        callback(null, { status: 'ok', user: objectFromAttributes(data.Item) });
+    dynamo.getItem(params, (getError, getResult) => {
+      if (getResult.Item) {
+        console.log('USER EXISTS');
+        callback(null, { status: 'ok', user: objectFromAttributes(getResult.Item) });
       } else {
+        console.log('ASKING SERVICE FOR USER INFO');
         request({
           method: 'GET',
           url: `${message.context.service_endpoint}/user`,
           headers: { "x-bot-context": JSON.stringify(message.context) }
-        }, (error, response, data) => {
-          // TODO: save user to DB
-          callback(null, data);
+        }, (serviceError, serviceResponse, serviceResult) => {
+          console.log('SERVICE RESULT', serviceResult);
+          let serviceData = JSON.parse(serviceResult);
+          console.log('SERVICE DATA', serviceData);
+          if ('ok' == serviceData.status) {
+            saveUser(serviceData.user, (updateError, updateResult) => {
+              console.log('SAVE RESULT', updateError, updateResult);
+              if (updateError) {
+                callback(null, { status: 'error', detail: updateError });
+              } else {
+                callback(null, { status: 'ok', user: objectFromAttributes(updateResult.Attributes) });
+              }
+            });
+          } else {
+            callback(null, serviceData);
+          }
         });
       }
     });
   } else {
-    callback(null, { status: 'missing', detail: 'Input does not incude a user'});
+    callback(null, { status: 'error', detail: 'Input does not incude a user'});
   }
-}
+};
+
+var saveUser = (user, callback) => {
+  console.log('SAVING USER', user);
+  let dynamo = new aws.DynamoDB();
+  let item = {
+    TableName: "bot-user",
+    Key: { user_id: { S: user.user_id } },
+    ReturnValues: "ALL_NEW",
+    ExpressionAttributeValues: {
+      ":current_date_time": { S: (new Date()).toISOString() }
+    },
+    UpdateExpression: "SET created_at = if_not_exists(created_at, :current_date_time), updated_at = :current_date_time"
+  };
+  Object.keys(user).forEach(function(key) {
+    if ('user_id' != key) {
+      item.ExpressionAttributeValues[`:${key}`] = { S: user[key] };
+      item.UpdateExpression += `, ${key} = :${key}`;
+    }
+  });
+  console.log('SAVE ITEM', item)
+  dynamo.updateItem(item, (error, data) => {
+    callback(error, data);
+  });
+};
 
 module.exports.callLambda = (functionName, payload) => {
     // console.log(functionName, payload);

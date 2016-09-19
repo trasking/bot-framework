@@ -7,17 +7,17 @@ const request = require('request');
 module.exports.input = (event, context, callback) => {
   var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
   console.log('INPUT', message);
-  bot.processGroup(message, (error, data) => {
-    console.log('GROUP: ', error, data);
-    if ('ok' == data.status) {
-      message.context.group = data.group;
+  bot.processGroup(message, (groupError, groupData) => {
+    console.log('GROUP: ', groupError, groupData);
+    if ('ok' == groupData.status) {
+      message.context.group = groupData.group;
     }
-    bot.processUser(message, (error, data) => {
-        console.log('USER: ', error, data);
-        if ('ok' == data.status) {
-          message.context.user = data.user;
+    bot.processUser(message, (userError, userData) => {
+        console.log('USER: ', userError, userData);
+        if ('ok' == userData.status) {
+          message.context.user = userData.user;
         } else {
-          console.log("USER NOT OK", data);
+          console.log("USER NOT OK", userData);
         }
 
         // process input here
