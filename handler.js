@@ -9,8 +9,17 @@ module.exports.input = (event, context, callback) => {
   console.log('INPUT', message);
   bot.processGroup(message, (error, data) => {
     console.log('GROUP: ', error, data);
+    if ('ok' == data.status) {
+      message.context.group = data.group;
+    }
     bot.processUser(message, (error, data) => {
         console.log('USER: ', error, data);
+        if ('ok' == data.status) {
+          message.context.user = data.user;
+        }
+
+        // process input here
+
         let payload = bot.samplePayload(message);
         request({
           method: 'POST',
@@ -18,8 +27,10 @@ module.exports.input = (event, context, callback) => {
           body: payload,
           json: true
         }, (error, response, data) => {
-          console.log('CALLBACK', error, response, data);
-          callback(null, { error: error, response: response, data: data });
+          var responseInfo = response ? `${response.statusCode} ${response.statusMessage}` : null;
+          var returnValue = { error: error, response: responseInfo, data: data }
+          console.log('CALLBACK', returnValue);
+          callback(null, returnValue);
         });
     });
   });

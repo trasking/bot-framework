@@ -5,23 +5,29 @@ const uri = require('url');
 const aws = require('aws-sdk');
 
 module.exports.processGroup = (message, callback) => {
-  if (message.context.group) {
+  if (message.context.group && message.context.group.group_id) {
     let dynamo = new aws.DynamoDB();
     let params = {
-      "TableName": "bot-group",
-      "Key": { "group_id": { "S": message.context.group } },
-      "ExpressionAttributeValues": { ":user": { "SS": [ message.context.user ] } },
-      "ConditionExpression": "NOT(contains(members, :user))",
-      "UpdateExpression": "ADD members :user",
-      "ReturnConsumedCapacity": "TOTAL",
-      "ReturnItemCollectionMetrics": "SIZE",
-      "ReturnValues": "ALL_NEW"
+      TableName: 'bot-group',
+      Key: { group_id: { S: message.context.group.group_id } }
     };
-    dynamo.updateItem(params, (error, data) => {
-      callback(error, data);
-    });
+    if (message.context.user && message.context.user.user_id) {
+      params.ExpressionAttributeValues = { ":user": { SS: [ message.context.user.user_id ] } };
+      params.ConditionExpression = "NOT(contains(members, :user))";
+      params.UpdateExpression = "ADD members :user";
+      params.ReturnValues = "ALL_NEW";
+      dynamo.updateItem(params, (error, data) => {
+        console.log('RESPONSE updateItem(bot-group)', error, data);
+        callback(error, { status: 'ok', group: objectFromAttributes(data.Attributes) });
+      });
+    } else {
+      dynamo.getItem(params, (error, data) => {
+        console.log('RESPONSE getItem(bot-group)', error, data);
+        callback(error, { status: 'ok', group: objectFromAttributes(data.Item) });
+      });
+    }
   } else {
-    callback(null, { status: 'missing', detail: 'No group provided in input'});
+    callback(null, { status: 'missing', detail: 'Input does not incude a group'});
   }
 }
 
@@ -29,14 +35,15 @@ module.exports.processUser = (message, callback) => {
   if (message.context.user) {
     let dynamo = new aws.DynamoDB();
     let params = {
-      "TableName": "bot-user",
-      "Key": { "user_id": { "S": message.context.user } }
+      TableName: 'bot-user',
+      Key: { "user_id": { "S": message.context.user.user_id } }
     };
     dynamo.getItem(params, (error, data) => {
-      callback(error, data);
+      console.log('RAW USER RESPONSE', error, data);
+      callback(error, { status: 'ok', user: objectFromAttributes(data.Item) });
     });
   } else {
-    callback(null, { status: 'missing', detail: 'No user provided in input'});
+    callback(null, { status: 'missing', detail: 'Input does not incude a user'});
   }
 }
 
@@ -115,4 +122,13 @@ module.exports.samplePayload = (message) => {
     	context: message.context
     };
 
+};
+
+let objectFromAttributes = (attributes) => {
+  let object = {};
+  Object.keys(attributes).forEach(function(key) {
+    var value = attributes[key]["S"] ? attributes[key]["S"] : attributes[key]["SS"];
+    object[key] = value;
+  });
+  return object;
 };
