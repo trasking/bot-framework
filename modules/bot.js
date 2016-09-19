@@ -3,6 +3,7 @@
 const https = require('https');
 const uri = require('url');
 const aws = require('aws-sdk');
+const request = require('request');
 
 module.exports.processGroup = (message, callback) => {
   if (message.context.group && message.context.group.group_id) {
@@ -23,6 +24,7 @@ module.exports.processGroup = (message, callback) => {
     } else {
       dynamo.getItem(params, (error, data) => {
         console.log('RESPONSE getItem(bot-group)', error, data);
+        // TODO: check for missing group
         callback(error, { status: 'ok', group: objectFromAttributes(data.Item) });
       });
     }
@@ -32,7 +34,7 @@ module.exports.processGroup = (message, callback) => {
 }
 
 module.exports.processUser = (message, callback) => {
-  if (message.context.user) {
+  if (message.context.user && message.context.user.user_id) {
     let dynamo = new aws.DynamoDB();
     let params = {
       TableName: 'bot-user',
@@ -40,7 +42,18 @@ module.exports.processUser = (message, callback) => {
     };
     dynamo.getItem(params, (error, data) => {
       console.log('RAW USER RESPONSE', error, data);
-      callback(error, { status: 'ok', user: objectFromAttributes(data.Item) });
+      if (data.Item) {
+        callback(null, { status: 'ok', user: objectFromAttributes(data.Item) });
+      } else {
+        request({
+          method: 'GET',
+          url: `${message.context.service_endpoint}/user`,
+          headers: { "x-bot-context": JSON.stringify(message.context) }
+        }, (error, response, data) => {
+          // TODO: save user to DB
+          callback(null, data);
+        });
+      }
     });
   } else {
     callback(null, { status: 'missing', detail: 'Input does not incude a user'});

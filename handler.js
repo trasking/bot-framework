@@ -16,6 +16,8 @@ module.exports.input = (event, context, callback) => {
         console.log('USER: ', error, data);
         if ('ok' == data.status) {
           message.context.user = data.user;
+        } else {
+          console.log("USER NOT OK", data);
         }
 
         // process input here
