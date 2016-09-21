@@ -8,30 +8,20 @@ const request = require('request');
 module.exports.processGroup = (message, callback) => {
   if (message.context.group && message.context.group.group_id) {
     let dynamo = new aws.DynamoDB();
-    let params = {
-      TableName: 'bot-group',
-      Key: { group_id: { S: message.context.group.group_id } }
-    };
-    if (message.context.user && message.context.user.user_id) {
-      params.ExpressionAttributeValues = { ":user": { SS: [ message.context.user.user_id ] } };
-      params.ConditionExpression = "NOT(contains(members, :user))";
-      params.UpdateExpression = "ADD members :user";
-      params.ReturnValues = "ALL_NEW";
-      dynamo.updateItem(params, (error, data) => {
-        console.log('RESPONSE updateItem(bot-group)', error, data);
-        callback(error, { status: 'ok', group: objectFromAttributes(data.Attributes) });
-      });
-    } else {
-      dynamo.getItem(params, (error, data) => {
-        console.log('RESPONSE getItem(bot-group)', error, data);
-        // TODO: check for missing group
-        callback(error, { status: 'ok', group: objectFromAttributes(data.Item) });
-      });
-    }
+    dynamo.getItem(params, (error, data) => {
+      console.log('RESPONSE getItem(bot-group)', error, data);
+      if (error) {
+        callback(null, { status: 'error', detail: error });
+      } else if (!data.Item) {
+        callback(null, { status: 'error', detail: `group not found: ${message.context.group.group_id}`})
+      } else {
+        callback(null, { status: 'ok', user: objectFromAttributes(data.Item) });
+      }
+    });
   } else {
     callback(null, { status: 'missing', detail: 'Input does not incude a group'});
   }
-}
+};
 
 module.exports.processUser = (message, callback) => {
   if (message.context.user && message.context.user.user_id) {
@@ -59,8 +49,10 @@ module.exports.processUser = (message, callback) => {
               console.log('SAVE RESULT', updateError, updateResult);
               if (updateError) {
                 callback(null, { status: 'error', detail: updateError });
+              } else if (!data.Attributes) {
+                callback(null, { status: 'error', detail: `user not found: ${message.context.user.user_id}`})
               } else {
-                callback(null, { status: 'ok', user: objectFromAttributes(updateResult.Attributes) });
+                callback(null, { status: 'ok', user: objectFromAttributes(data.Attributes) });
               }
             });
           } else {
@@ -70,7 +62,7 @@ module.exports.processUser = (message, callback) => {
       }
     });
   } else {
-    callback(null, { status: 'error', detail: 'Input does not incude a user'});
+    callback(null, { status: 'missing', detail: 'Input does not incude a user'});
   }
 };
 
