@@ -45,3 +45,11 @@ functions:
       - http:
           path: group
           method: post
+
+  getGroup:
+    handler: handler.getGroup
+    memorySize: 128
+    events:
+      - http:
+          path: group
+          method: get

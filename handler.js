@@ -7,7 +7,7 @@ const request = require('request');
 module.exports.input = (event, context, callback) => {
   var message = event.Records ? JSON.parse(event.Records[0].Sns.Message) : event.body;
   console.log('INPUT', message);
-  bot.processGroup(message, (groupError, groupData) => {
+  bot.processGroup(message.context.group.group_id, (groupError, groupData) => {
     console.log('GROUP: ', groupError, groupData);
     if ('ok' == groupData.status) {
       message.context.group = groupData.group;
@@ -17,14 +17,6 @@ module.exports.input = (event, context, callback) => {
         if ('ok' == userData.status) {
           message.context.user = userData.user;
         }
-
-        var payload = { status: 'ok', context: message.context };
-        var botRegex = new RegExp(`^<@${message.context.user.user_id}>`);
-        if (botRegex.test(event.body.event.text)) {
-
-        }
-)
-        if (event.body.event.text.match(/^<@>/)) {
 
         // process input here
 
@@ -105,3 +97,7 @@ module.exports.addGroup = (event, context, callback) => {
     callback(null, { error: error, data: data });
   });
 };
+
+module.exports.getGroup = (event, context, callback) => {
+  bot.processGroup(event.query.id, callback);
+}

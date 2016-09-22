@@ -5,22 +5,21 @@ const uri = require('url');
 const aws = require('aws-sdk');
 const request = require('request');
 
-module.exports.processGroup = (message, callback) => {
-  if (message.context.group && message.context.group.group_id) {
-    let dynamo = new aws.DynamoDB();
-    dynamo.getItem(params, (error, data) => {
-      console.log('RESPONSE getItem(bot-group)', error, data);
-      if (error) {
-        callback(null, { status: 'error', detail: error });
-      } else if (!data.Item) {
-        callback(null, { status: 'error', detail: `group not found: ${message.context.group.group_id}`})
-      } else {
-        callback(null, { status: 'ok', user: objectFromAttributes(data.Item) });
-      }
-    });
-  } else {
-    callback(null, { status: 'missing', detail: 'Input does not incude a group'});
-  }
+module.exports.processGroup = (group_id, callback) => {
+  let dynamo = new aws.DynamoDB();
+  let params = {
+    TableName: 'bot-group',
+    Key: { group_id: { S: group_id } }
+  };
+  dynamo.getItem(params, (error, data) => {
+    if (error) {
+      callback(null, { status: 'error', detail: error });
+    } else if (!data.Item) {
+      callback(null, { status: 'error', detail: `group not found: ${group_id}`})
+    } else {
+      callback(null, { status: 'ok', group: objectFromAttributes(data.Item) });
+    }
+  });
 };
 
 module.exports.processUser = (message, callback) => {
