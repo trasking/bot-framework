@@ -16,9 +16,15 @@ module.exports.input = (event, context, callback) => {
         console.log('USER: ', userError, userData);
         if ('ok' == userData.status) {
           message.context.user = userData.user;
-        } else {
-          console.log("USER NOT OK", userData);
         }
+
+        var payload = { status: 'ok', context: message.context };
+        var botRegex = new RegExp(`^<@${message.context.user.user_id}>`);
+        if (botRegex.test(event.body.event.text)) {
+
+        }
+)
+        if (event.body.event.text.match(/^<@>/)) {
 
         // process input here
 
